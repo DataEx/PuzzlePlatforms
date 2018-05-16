@@ -27,10 +27,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Setup")
 	float Velocity;
 
+	void AddActivateTrigger();
+	void RemoveActivateTrigger();
+
 private:
 	float GetDistance(FVector A, FVector B);
 
 	FVector StartingPosition;
 	FVector AdditiveVector;
 	float TravelDistance;
+
+	UPROPERTY(EditAnywhere)
+	int ActiveTriggers = 1;
 };

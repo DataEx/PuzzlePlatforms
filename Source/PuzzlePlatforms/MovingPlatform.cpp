@@ -22,9 +22,7 @@ void AMovingPlatform::BeginPlay()
 		SetReplicateMovement(true);
 	}
 
-
 	StartingPosition = GetActorLocation();
-	//TargetPosition += StartingPosition;
 	TargetPosition = GetTransform().TransformPosition(TargetPosition);
 
 	AdditiveVector = (TargetPosition - StartingPosition);
@@ -36,6 +34,10 @@ void AMovingPlatform::BeginPlay()
 
 void AMovingPlatform::Tick(float DeltaTime)
 {
+	Super::Tick(DeltaTime);
+
+	if (ActiveTriggers <= 0) { return; }
+
 	FVector CurrentLocation = GetActorLocation();
 	CurrentLocation += AdditiveVector * Velocity * DeltaTime;
 
@@ -52,6 +54,18 @@ void AMovingPlatform::Tick(float DeltaTime)
 
 	if(HasAuthority())
 		SetActorLocation(CurrentLocation);
+}
+
+void AMovingPlatform::AddActivateTrigger()
+{
+	ActiveTriggers++;
+}
+
+void AMovingPlatform::RemoveActivateTrigger()
+{
+	if (ActiveTriggers > 0)
+		ActiveTriggers--;
+
 }
 
 float AMovingPlatform::GetDistance(FVector A, FVector B)
