@@ -5,6 +5,7 @@
 #include "ConstructorHelpers.h"
 #include "PlatformTrigger.h"
 #include "Blueprint/UserWidget.h"
+#include "MenuSystem/MainMenu.h"
 
 UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitializer& ObjectInitializer) 
 {
@@ -20,8 +21,23 @@ void UPuzzlePlatformsGameInstance::Init()
 	UE_LOG(LogTemp, Warning, TEXT("Reference to menu class: %s"), *MenuClass->GetName());
 }
 
+void UPuzzlePlatformsGameInstance::LoadMenu()
+{
+	if (!ensure(MenuClass != nullptr)) { return; }
+	Menu = CreateWidget<UMainMenu>(this, MenuClass);
+
+	if (!ensure(Menu != nullptr)) { return; }
+
+	Menu->Setup();
+	Menu->SetMenuInterface(this);
+}
+
 void UPuzzlePlatformsGameInstance::Host()
 {
+	if (Menu != nullptr){
+		Menu->Teardown();
+	}
+
 	UEngine* Engine = GetEngine();
 	if (Engine == nullptr) { return; }
 	Engine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, TEXT("Hosting"));
@@ -39,7 +55,7 @@ void UPuzzlePlatformsGameInstance::Join(const FString& Address)
 	Engine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, Output);
 
 	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (PlayerController == nullptr) { return; }
+	if (!ensure(PlayerController != nullptr)) { return; }
 
 	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 }
