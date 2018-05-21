@@ -23,5 +23,7 @@ class PUZZLEPLATFORMS_API IMenuInterface
 public:
 	virtual void Host() = 0; // "= 0" means that no implementation is necessary to compile 
 	virtual void Join(const FString& Address) = 0;
-	
+
+	virtual void LeaveServer() = 0;
+
 };
