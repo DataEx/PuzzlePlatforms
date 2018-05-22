@@ -1,10 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MainMenu.h"
+#include "MenuSystem/ServerRow.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
-#include "Components/EditableTextBox.h"
+#include "Components/ScrollBox.h"
+#include "Components/TextBlock.h"
+#include "ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
 
+
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
+{
+	ConstructorHelpers::FClassFinder<UUserWidget> ServerRowClassBP(TEXT("/Game/MenuSystem/WBP_ServerRow"));
+	if (!ensure(ServerRowClassBP.Class != nullptr)) { return; }
+
+	ServerRowClass = ServerRowClassBP.Class;
+}
 
 bool UMainMenu::Initialize()
 {
@@ -31,13 +43,39 @@ void UMainMenu::HostServer() {
 	MenuInterface->Host();
 }
 
+void UMainMenu::SetServerList(TArray<FString> ServerNames)
+{
+	if (!ensure(ServerRowClass != nullptr)) { return; }
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) { return; }
+
+	ServerList->ClearChildren();
+	for(int i = 0; i < ServerNames.Num(); i++)
+	{
+		UServerRow* Row = CreateWidget<UServerRow>(World, ServerRowClass);
+		if (!ensure(Row != nullptr)) { return; }
+		Row->ServerName->SetText(FText::FromString(ServerNames[i]));
+		Row->Setup(this, i);
+		ServerList->AddChild(Row);
+	}
+}
+
+void UMainMenu::SelectRowIndex(uint32 Index)
+{
+	SelectedRowIndex = Index;
+}
+
 void UMainMenu::JoinServer()
 {
 	if (!ensure(MenuInterface != nullptr)) { return; }
-	if (!ensure(IPAddressField != nullptr)) { return; }
 
-	FString IPAddress = IPAddressField->GetText().ToString();
-	MenuInterface->Join(IPAddress);
+	if (SelectedRowIndex.IsSet()) {
+		MenuInterface->Join(SelectedRowIndex.GetValue());
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SelectedRowIndex is not set"));
+	}
 }
 
 void UMainMenu::OpenJoinMenu()
@@ -46,6 +84,9 @@ void UMainMenu::OpenJoinMenu()
 	if (!ensure(JoinMenu != nullptr)) { return; }
 
 	MenuSwitcher->SetActiveWidget(JoinMenu);
+
+	if (!ensure(MenuInterface != nullptr)) { return; }
+	MenuInterface->RefreshServerList();
 }
 
 void UMainMenu::OpenMainMenu()
@@ -66,6 +107,8 @@ void UMainMenu::ExitGame()
 
 	PlayerController->ConsoleCommand("Quit");
 }
+
+
 
 
 

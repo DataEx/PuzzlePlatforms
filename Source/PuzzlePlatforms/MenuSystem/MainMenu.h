@@ -12,12 +12,19 @@
 
 class UButton;
 class UWidgetSwitcher;
-class UEditableTextBox;
+class UScrollBox;
 
 UCLASS()
 class PUZZLEPLATFORMS_API UMainMenu : public UMenuWidget
 {
 	GENERATED_BODY()
+
+public:
+	UMainMenu(const FObjectInitializer& ObjectInitializer);
+
+	void SetServerList(TArray<FString> ServerNames);
+
+	void SelectRowIndex(uint32 Index);
 
 protected:
 	virtual bool Initialize();
@@ -63,5 +70,9 @@ private:
 	UWidget* JoinMenu;
 
 	UPROPERTY(meta = (BindWidget))
-	UEditableTextBox* IPAddressField;
+	UScrollBox* ServerList;
+
+	TSubclassOf<UUserWidget> ServerRowClass;
+
+	TOptional<uint32> SelectedRowIndex;
 };
