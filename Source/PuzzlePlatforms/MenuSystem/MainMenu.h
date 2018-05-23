@@ -10,9 +10,21 @@
  * 
  */
 
+USTRUCT()
+struct FServerData 
+{
+	GENERATED_BODY()
+
+	FString Name;
+	uint16 CurrentPlayers;
+	uint16 MaxPlayers;
+	FString HostUserName;
+};
+
 class UButton;
 class UWidgetSwitcher;
 class UScrollBox;
+class UEditableTextBox;
 
 UCLASS()
 class PUZZLEPLATFORMS_API UMainMenu : public UMenuWidget
@@ -22,7 +34,7 @@ class PUZZLEPLATFORMS_API UMainMenu : public UMenuWidget
 public:
 	UMainMenu(const FObjectInitializer& ObjectInitializer);
 
-	void SetServerList(TArray<FString> ServerNames);
+	void SetServerList(TArray<FServerData> ServerNames);
 
 	void SelectRowIndex(uint32 Index);
 
@@ -43,19 +55,28 @@ private:
 	void OpenMainMenu();
 
 	UFUNCTION()
+	void OpenHostMenu();
+
+	UFUNCTION()
 	void ExitGame();
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* HostButton;
+	UButton* MainMenuHostButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* JoinButton;
+	UButton* MainMenuJoinButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* CancelButton;
+	UButton* HostMenuJoinButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* JoinServerButton;
+	UButton* HostMenuCancelButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* JoinMenuCancelButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* JoinMenuJoinButton;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* ExitGameButton;
@@ -64,7 +85,13 @@ private:
 	UWidgetSwitcher* MenuSwitcher;
 
 	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* ServerName;
+
+	UPROPERTY(meta = (BindWidget))
 	UWidget* MainMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	UWidget* HostMenu;
 
 	UPROPERTY(meta = (BindWidget))
 	UWidget* JoinMenu;
@@ -75,4 +102,6 @@ private:
 	TSubclassOf<UUserWidget> ServerRowClass;
 
 	TOptional<uint32> SelectedRowIndex;
+
+	void UpdateChildren();
 };

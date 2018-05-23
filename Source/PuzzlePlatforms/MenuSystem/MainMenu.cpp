@@ -6,6 +6,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "Components/EditableTextBox.h"
 #include "ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
 
@@ -22,16 +23,20 @@ bool UMainMenu::Initialize()
 {
 	if (!Super::Initialize()) { return false; }
 
-	if (!ensure(HostButton != nullptr)) { return false; }
-	if (!ensure(JoinButton != nullptr)) { return false; }
-	if (!ensure(CancelButton != nullptr)) { return false; }
-	if (!ensure(JoinServerButton != nullptr)) { return false; }
+	if (!ensure(MainMenuHostButton != nullptr)) { return false; }
+	if (!ensure(MainMenuJoinButton != nullptr)) { return false; }
+	if (!ensure(JoinMenuCancelButton != nullptr)) { return false; }
+	if (!ensure(JoinMenuJoinButton != nullptr)) { return false; }
 	if (!ensure(ExitGameButton != nullptr)) { return false; }
+	if (!ensure(HostMenuCancelButton != nullptr)) { return false; }
+	if (!ensure(HostMenuJoinButton != nullptr)) { return false; }
 
-	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
-	JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
-	CancelButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
-	JoinServerButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
+	MainMenuHostButton->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu); 
+	MainMenuJoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
+	JoinMenuCancelButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
+	JoinMenuJoinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
+	HostMenuCancelButton->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
+	HostMenuJoinButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 	ExitGameButton->OnClicked.AddDynamic(this, &UMainMenu::ExitGame);
 
 	return true;
@@ -39,23 +44,26 @@ bool UMainMenu::Initialize()
 
 void UMainMenu::HostServer() {
 	if (!ensure(MenuInterface != nullptr)) { return; }
+	if (!ensure(ServerName != nullptr)) { return; }
 
-	MenuInterface->Host();
+	if (ServerName->Text.ToString() == "") { return; }
+
+	MenuInterface->Host(ServerName->Text.ToString());
 }
 
-void UMainMenu::SetServerList(TArray<FString> ServerNames)
+void UMainMenu::SetServerList(TArray<FServerData> ServerData)
 {
 	if (!ensure(ServerRowClass != nullptr)) { return; }
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) { return; }
 
 	ServerList->ClearChildren();
-	for(int i = 0; i < ServerNames.Num(); i++)
+	for(int32 i = 0; i < ServerData.Num(); i++)
 	{
 		UServerRow* Row = CreateWidget<UServerRow>(World, ServerRowClass);
 		if (!ensure(Row != nullptr)) { return; }
-		Row->ServerName->SetText(FText::FromString(ServerNames[i]));
-		Row->Setup(this, i);
+
+		Row->Setup(this, i, ServerData[i]);
 		ServerList->AddChild(Row);
 	}
 }
@@ -63,6 +71,20 @@ void UMainMenu::SetServerList(TArray<FString> ServerNames)
 void UMainMenu::SelectRowIndex(uint32 Index)
 {
 	SelectedRowIndex = Index;
+	UpdateChildren();
+}
+
+void UMainMenu::UpdateChildren()
+{
+	for (int32 i = 0; i < ServerList->GetChildrenCount(); i++) 
+	{
+		UWidget* Child = ServerList->GetChildAt(i);
+		UServerRow* ServerRowChild = Cast<UServerRow>(Child);
+		
+		if (ServerRowChild != nullptr) {
+			ServerRowChild->bIsSelected = (SelectedRowIndex.IsSet()) && (i == SelectedRowIndex.GetValue());
+		}
+	}
 }
 
 void UMainMenu::JoinServer()
@@ -95,6 +117,14 @@ void UMainMenu::OpenMainMenu()
 	if (!ensure(MainMenu != nullptr)) { return; }
 
 	MenuSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UMainMenu::OpenHostMenu()
+{
+	if (!ensure(MenuSwitcher != nullptr)) { return; }
+	if (!ensure(HostMenu != nullptr)) { return; }
+
+	MenuSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UMainMenu::ExitGame()

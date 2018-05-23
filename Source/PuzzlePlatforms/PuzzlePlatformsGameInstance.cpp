@@ -11,6 +11,7 @@
 #include "OnlineSessionSettings.h"
 
 const static FName SESSION_NAME = TEXT("My Session Game");
+const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
 UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitializer& ObjectInitializer) 
 {
@@ -65,8 +66,9 @@ void UPuzzlePlatformsGameInstance::LoadInGameMenu()
 	InGameMenu->SetMenuInterface(this);
 }
 
-void UPuzzlePlatformsGameInstance::Host()
+void UPuzzlePlatformsGameInstance::Host(FString ServerName)
 {
+	this->DesiredServerName = ServerName;
 	if (SessionInterface.IsValid()) {
 		auto ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);
 
@@ -117,11 +119,27 @@ void UPuzzlePlatformsGameInstance::OnFindSessionsComplete(bool Success)
 
 		TArray<FOnlineSessionSearchResult> SearchResults = SessionSearch->SearchResults;
 
-		TArray<FString> ServerNames;
+		TArray<FServerData> ServerNames;
 		for (size_t i = 0; i < SearchResults.Num(); i++)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *SearchResults[i].GetSessionIdStr());
-			ServerNames.Add(SearchResults[i].GetSessionIdStr());
+			FServerData Data;
+			Data.MaxPlayers = SearchResults[i].Session.SessionSettings.NumPublicConnections;
+			Data.CurrentPlayers = Data.MaxPlayers - SearchResults[i].Session.NumOpenPublicConnections;
+			Data.HostUserName = SearchResults[i].Session.OwningUserName;
+			Data.Name = SearchResults[i].GetSessionIdStr();
+
+			FString ServerName;
+			if (SearchResults[i].Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, ServerName))
+			{
+				Data.Name = ServerName;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to get server name at index: %d"), i);
+			}
+
+			ServerNames.Add(Data);
 		}
 
 		MainMenu->SetServerList(ServerNames);
@@ -156,10 +174,23 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 	if (SessionInterface.IsValid()) 
 	{
 		FOnlineSessionSettings SessionSettings;
-		SessionSettings.bIsLANMatch = false;
+		if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+		{
+			SessionSettings.bIsLANMatch = true;
+		}
+		else
+		{
+			SessionSettings.bIsLANMatch = false;
+		}
+
 		SessionSettings.NumPublicConnections = 2;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
+
+		if (DesiredServerName != "")
+		{
+			SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		}
 
 		SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
 	}

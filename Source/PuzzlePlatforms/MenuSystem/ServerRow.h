@@ -19,15 +19,23 @@ class PUZZLEPLATFORMS_API UServerRow : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ServerName;
-	
-	void Setup(UMainMenu* Parent, uint32 Index);
+	void Setup(UMainMenu* Parent, uint32 Index, struct FServerData Data);
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsSelected = false;
 
 protected:
 	virtual bool Initialize();
 
 private:
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* ServerName;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* HostUser;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* ServerCapacity;
 
 	UPROPERTY()
 	UMainMenu* Parent;
