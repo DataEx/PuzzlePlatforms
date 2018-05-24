@@ -40,6 +40,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LoadInGameMenu();
 
+	void StartSession();
+
 
 private:
 	TSubclassOf<UUserWidget> MainMenuClass;

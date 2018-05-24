@@ -9,6 +9,7 @@
 /**
  * 
  */
+
 UCLASS()
 class PUZZLEPLATFORMS_API ALobbyGameMode : public APuzzlePlatformsGameMode
 {
@@ -19,7 +20,9 @@ public:
 	void Logout(AController* Exiting) override;
 
 private:
+	void StartGame();
+
 	uint32 PlayerCount = 0;
-	
+	FTimerHandle GameStartTimer;
 	
 };
