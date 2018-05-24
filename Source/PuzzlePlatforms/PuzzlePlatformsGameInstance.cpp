@@ -100,7 +100,7 @@ void UPuzzlePlatformsGameInstance::OnCreateSessionComplete(FName SessionName, bo
 
 	UWorld* World = GetWorld();
 	if (World == nullptr) { return; }
-	World->ServerTravel("/Game/Maps/ThirdPersonExampleMap?listen");
+	World->ServerTravel("/Game/Maps/Lobby?listen");
 }
 
 void UPuzzlePlatformsGameInstance::OnDestroySessionComplete(FName SessionName, bool Success)
